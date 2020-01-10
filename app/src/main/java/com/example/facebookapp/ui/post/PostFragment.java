@@ -25,6 +25,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.facebookapp.R;
 import com.example.facebookapp.api.ApiPost;
@@ -32,6 +33,9 @@ import com.example.facebookapp.model.Post;
 import com.example.facebookapp.url.Url;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -41,12 +45,16 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class PostFragment extends Fragment {
+
+
     private ImageView imageView;
     private Button button;
     private EditText editText;
     private String status, image;
     private Uri uri;
     private MultipartBody.Part mbImage;
+    private RecyclerView recyclerView;
+    private List<Post> postList;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -56,6 +64,7 @@ public class PostFragment extends Fragment {
         imageView = root.findViewById(R.id.img);
         editText = root.findViewById(R.id.etStatus);
         button = root.findViewById(R.id.btnPost);
+        recyclerView = root.findViewById(R.id.rvPost);
 
         postViewModel.getText().observe(this, new Observer<String>() {
             @Override
@@ -85,7 +94,9 @@ public class PostFragment extends Fragment {
             }
         });
         return root;
-    } @Override
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == 2) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -94,6 +105,13 @@ public class PostFragment extends Fragment {
                 Toast.makeText(getContext(), "No Permission", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        postList = new ArrayList<>();
+        showPost();
     }
 
     @Override
@@ -156,6 +174,19 @@ public class PostFragment extends Fragment {
         });
     }
 
+    private void showPost() {
+        ApiPost postApi = Url.getInstance().create(ApiPost.class);
+        Call<List<Post>> postListCall = postApi.showPost();
+
+        try {
+            Response<List<Post>> response = postListCall.execute();
+            postList = response.body();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void addPost(Post post) {
 
         ApiPost postAPI = Url.getInstance().create(ApiPost.class);
@@ -178,6 +209,5 @@ public class PostFragment extends Fragment {
     }
 
 
-
-    }
+}
 
